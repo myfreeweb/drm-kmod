@@ -682,9 +682,17 @@ static void revoke_mmaps(struct intel_gt *gt)
 			continue;
 
 		GEM_BUG_ON(vma->fence != &gt->ggtt->fence_regs[i]);
-		node = &vma->obj->base.vma_node;
+
+		if (!vma->mmo)
+			continue;
+
+		node = &vma->mmo->vma_node;
 		vma_offset = vma->ggtt_view.partial.offset << PAGE_SHIFT;
+<<<<<<< HEAD
 #ifdef __linux__
+=======
+
+>>>>>>> drm/i915: Introduce DRM_I915_GEM_MMAP_OFFSET
 		unmap_mapping_range(gt->i915->drm.anon_inode->i_mapping,
 				    drm_vma_node_offset_addr(node) + vma_offset,
 				    vma->size,
