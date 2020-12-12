@@ -2388,9 +2388,6 @@ bool dcn20_fast_validate_bw(
 	if (!pipes)
 		return false;
 
-#ifdef __FreeBSD__	
-	kernel_fpu_begin();
-#endif
 	/* merge previously split odm pipes since mode support needs to make the decision */
 	for (i = 0; i < dc->res_pool->pipe_count; i++) {
 		struct pipe_ctx *pipe = &context->res_ctx.pipe_ctx[i];
@@ -2886,9 +2883,6 @@ validate_fail:
 	out = false;
 
 validate_out:
-#ifdef __FreeBSD__
-	kernel_fpu_end();
-#endif	
 	kfree(pipes);
 
 	BW_VAL_TRACE_FINISH();
@@ -2904,22 +2898,27 @@ bool dcn20_validate_bandwidth(struct dc *dc, struct dc_state *context,
 	bool full_pstate_supported = false;
 	bool dummy_pstate_supported = false;
 #ifdef __FreeBSD__
+	double p_state_latency_us;
+
 	kernel_fpu_begin();
-#endif
+	p_state_latency_us = context->bw_ctx.dml.soc.dram_clock_change_latency_us;
+#else
 	double p_state_latency_us = context->bw_ctx.dml.soc.dram_clock_change_latency_us;
-#ifdef __FreeBSD__
-	kernel_fpu_end();
 #endif
 
-	if (fast_validate)
+	if (fast_validate) {
+#ifdef __FreeBSD__
+		voltage_supported = dcn20_validate_bandwidth_internal(dc, context, true);
+		kernel_fpu_end();
+		return voltage_supported;
+#else
 		return dcn20_validate_bandwidth_internal(dc, context, true);
+#endif
+	}
 
 
 	// Best case, we support full UCLK switch latency
 	voltage_supported = dcn20_validate_bandwidth_internal(dc, context, false);
-#ifdef __FreeBSD__
-	kernel_fpu_begin();
-#endif
 	full_pstate_supported = context->bw_ctx.bw.dcn.clk.p_state_change_support;
 
 	if (context->bw_ctx.dml.soc.dummy_pstate_latency_us == 0 ||
@@ -3464,6 +3463,10 @@ static bool construct(
 	enum dml_project dml_project_version =
 			get_dml_project_version(ctx->asic_id.hw_internal_rev);
 
+#ifdef __FreeBSD__
+	kernel_fpu_begin();
+#endif
+
 	ctx->dc_bios->regs = &bios_regs;
 	pool->base.funcs = &dcn20_res_pool_funcs;
 
@@ -3603,9 +3606,6 @@ static bool construct(
 
 			ranges.num_reader_wm_sets = 1;
 		} else if (loaded_bb->num_states > 1) {
-#ifdef __FreeBSD__
-			kernel_fpu_begin();
-#endif
 			for (i = 0; i < 4 && i < loaded_bb->num_states; i++) {
 				ranges.reader_wm_sets[i].wm_inst = i;
 				ranges.reader_wm_sets[i].min_drain_clk_mhz = PP_SMU_WM_SET_RANGE_CLK_UNCONSTRAINED_MIN;
@@ -3616,9 +3616,6 @@ static bool construct(
 				ranges.num_reader_wm_sets = i + 1;
 			}
 
-#ifdef __FreeBSD__
-			kernel_fpu_end();
-#endif
 			ranges.reader_wm_sets[0].min_fill_clk_mhz = PP_SMU_WM_SET_RANGE_CLK_UNCONSTRAINED_MIN;
 			ranges.reader_wm_sets[ranges.num_reader_wm_sets - 1].max_fill_clk_mhz = PP_SMU_WM_SET_RANGE_CLK_UNCONSTRAINED_MAX;
 		}
@@ -3757,10 +3754,16 @@ static bool construct(
 
 	dc->cap_funcs = cap_funcs;
 
+#ifdef __FreeBSD__
+	kernel_fpu_end();
+#endif
 	return true;
 
 create_fail:
 
+#ifdef __FreeBSD__
+	kernel_fpu_end();
+#endif
 	destruct(pool);
 
 	return false;
