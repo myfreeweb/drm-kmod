@@ -203,10 +203,10 @@ int drm_panel_enable(struct drm_panel *panel)
 
 #ifdef __linux__
 	ret = backlight_enable(panel->backlight);
-#endif
 	if (ret < 0)
 		DRM_DEV_INFO(panel->dev, "failed to enable backlight: %d\n",
 			     ret);
+#endif
 
 	return 0;
 }
@@ -231,10 +231,10 @@ int drm_panel_disable(struct drm_panel *panel)
 
 #ifdef __linux__
 	ret = backlight_disable(panel->backlight);
-#endif
 	if (ret < 0)
 		DRM_DEV_INFO(panel->dev, "failed to disable backlight: %d\n",
 			     ret);
+#endif
 
 	if (panel->funcs && panel->funcs->disable)
 		return panel->funcs->disable(panel);
