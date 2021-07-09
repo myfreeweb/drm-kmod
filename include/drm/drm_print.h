@@ -616,15 +616,6 @@ void __drm_err(const char *format, ...);
 #define DRM_DEBUG_PRIME(fmt, ...)					\
 	__drm_dbg(DRM_UT_PRIME, fmt, ##__VA_ARGS__)
 
-#define DRM_DEBUG_ATOMIC(fmt, ...)					\
-	__drm_dbg(DRM_UT_ATOMIC, fmt, ##__VA_ARGS__)
-
-#define DRM_DEBUG_VBL(fmt, ...)						\
-	__drm_dbg(DRM_UT_VBL, fmt, ##__VA_ARGS__)
-
-#define DRM_DEBUG_LEASE(fmt, ...)					\
-	__drm_dbg(DRM_UT_LEASE, fmt, ##__VA_ARGS__)
-
 #define DRM_DEBUG_DP(fmt, ...)						\
 	__drm_dbg(DRM_UT_DP, fmt, ## __VA_ARGS__)
 
